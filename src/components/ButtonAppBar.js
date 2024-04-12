@@ -168,7 +168,7 @@ function ButtonAppBar({ chordLibrary, setChordLibrary }) {
                 const jsonString = event.target.result;
                 parseChordsFromJSON(jsonString, (chords) => {
                     if (chords.length === 0) {
-                        setChordInfoMessage("The chord file is either invalid or empty.  Make sure on Dot I/O to first 'Read chords from device' and then export. ");
+                        setChordInfoMessage("The chord file is either invalid or empty.");
                     } else {
                         setChordInfoMessage(`Parsed ${chords.length} chords from the file.`);
                     }
