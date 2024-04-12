@@ -5,10 +5,108 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import KeyboardAltIcon from '@mui/icons-material/KeyboardAlt';
 import SettingsIcon from '@mui/icons-material/Settings';
-import Papa from 'papaparse';
 import { Link } from 'react-router-dom';
 
 const pages = ['Word Tools', 'Chord Tools', 'Practice', 'CCX Debugging'];
+
+const actionCodes = {
+    32: ' ',
+    33: '!',
+    34: '"',
+    35: '#',
+    36: '$',
+    37: '%',
+    38: '&',
+    39: '\'',
+    40: '(',
+    41: ')',
+    42: '*',
+    43: '+',
+    44: ',',
+    45: '-',
+    46: '.',
+    47: '/',
+    48: '0',
+    49: '1',
+    50: '2',
+    51: '3',
+    52: '4',
+    53: '5',
+    54: '6',
+    55: '7',
+    56: '8',
+    57: '9',
+    58: ':',
+    59: ';',
+    60: '<',
+    61: '=',
+    62: '>',
+    63: '?',
+    64: '@',
+    65: 'A',
+    66: 'B',
+    67: 'C',
+    68: 'D',
+    69: 'E',
+    70: 'F',
+    71: 'G',
+    72: 'H',
+    73: 'I',
+    74: 'J',
+    75: 'K',
+    76: 'L',
+    77: 'M',
+    78: 'N',
+    79: 'O',
+    80: 'P',
+    81: 'Q',
+    82: 'R',
+    83: 'S',
+    84: 'T',
+    85: 'U',
+    86: 'V',
+    87: 'W',
+    88: 'X',
+    89: 'Y',
+    90: 'Z',
+    91: '[',
+    92: '\\',
+    93: ']',
+    94: '^',
+    95: '_',
+    96: '`',
+    97: 'a',
+    98: 'b',
+    99: 'c',
+    100: 'd',
+    101: 'e',
+    102: 'f',
+    103: 'g',
+    104: 'h',
+    105: 'i',
+    106: 'j',
+    107: 'k',
+    108: 'l',
+    109: 'm',
+    110: 'n',
+    111: 'o',
+    112: 'p',
+    113: 'q',
+    114: 'r',
+    115: 's',
+    116: 't',
+    117: 'u',
+    118: 'v',
+    119: 'w',
+    120: 'x',
+    121: 'y',
+    122: 'z',
+    123: '{',
+    124: '|',
+    125: '}',
+    126: '~',
+    536: 'DUP'
+};
 
 function ButtonAppBar({ chordLibrary, setChordLibrary }) {
     const [anchorElNav, setAnchorElNav] = React.useState(null);
@@ -41,45 +139,58 @@ function ButtonAppBar({ chordLibrary, setChordLibrary }) {
         setOpenModal(false);
     };
 
-    const parseChordsFromCSV = (file, callback) => {
-        Papa.parse(file, {
-            complete: function (results) {
-                const chords = results.data.reduce((acc, row) => {
-                    if (row.length >= 2) {
-                        let [chordInput, chordOutput] = row;
-                        if (typeof chordOutput !== 'undefined') {
-                            chordOutput = chordOutput.replace(/Space/g, " ");
-                            acc.push({ chordInput, chordOutput });
-                        }
-                    }
-                    return acc;
-                }, []);
-                callback(chords);
+    const parseChordsFromJSON = (jsonString, callback) => {
+        const data = JSON.parse(jsonString);
+        const chordsData = data.chords;
+
+        const chords = chordsData.reduce((acc, chordPair) => {
+            if (chordPair.length >= 2) {
+                let [chordInput, chordOutput] = chordPair;
+                if (typeof chordOutput !== 'undefined') {
+                    // Convert the action codes to characters
+                    chordInput = chordInput.filter(code => code !== 0).map(code => actionCodes[code]).filter(Boolean).join('+');
+                    chordOutput = chordOutput.map(code => actionCodes[code]).filter(Boolean).join('');
+                    acc.push({ chordInput, chordOutput });
+                }
             }
-        });
+            return acc;
+        }, []);
+
+        callback(chords);
     };
+
 
     const handleFileChange = (e) => {
         setSelectedFile(e.target.files[0]);
         if (e.target.files[0]) {
-            parseChordsFromCSV(e.target.files[0], (chords) => {
-                if (chords.length === 0) {
-                    setChordInfoMessage("The chord file is either invalid or empty.  Make sure on Dot I/O to first 'Read chords from device' and then export. ");
-                } else {
-                    setChordInfoMessage(`Parsed ${chords.length} chords from the file.`);
-                }
-            });
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const jsonString = event.target.result;
+                parseChordsFromJSON(jsonString, (chords) => {
+                    if (chords.length === 0) {
+                        setChordInfoMessage("The chord file is either invalid or empty.");
+                    } else {
+                        setChordInfoMessage(`Parsed ${chords.length} chords from the file.`);
+                    }
+                });
+            };
+            reader.readAsText(e.target.files[0]);
         }
     };
 
 
     const handleFileUpload = () => {
         if (selectedFile) {
-            parseChordsFromCSV(selectedFile, (chords) => {
-                if (chords.length > 0) {
-                    setChordLibrary(chords);
-                }
-            });
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const jsonString = event.target.result;
+                parseChordsFromJSON(jsonString, (chords) => {
+                    if (chords.length > 0) {
+                        setChordLibrary(chords);
+                    }
+                });
+            };
+            reader.readAsText(selectedFile);
         }
         setChordInfoMessage(null);
         handleCloseModal();
@@ -219,8 +330,8 @@ function ButtonAppBar({ chordLibrary, setChordLibrary }) {
             <Dialog open={openModal} onClose={handleCloseModal}>
                 <DialogTitle>Upload Chord Library File</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>Browse for your exported Chord Library from <a href="http://www.iq-eq.io/#/manager">Dot I/O</a> for use in the Chord Tools and Practice.</DialogContentText>
-                    <Input type="file" accept=".csv" onChange={handleFileChange} />
+                    <DialogContentText>Browse for your exported Chord Backup from <a href="https://manager.charachorder.com/config/layout/">Device Manager</a> for use in the Chord Tools and Practice.</DialogContentText>
+                    <Input type="file" accept=".json" onChange={handleFileChange} />
                     <Typography variant="body2" color={(chordInfoMessage && chordInfoMessage.includes('invalid')) ? 'error' : 'textPrimary'}>
                         {chordInfoMessage}
                     </Typography>
