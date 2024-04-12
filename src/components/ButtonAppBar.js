@@ -105,7 +105,10 @@ const actionCodes = {
     124: '|',
     125: '}',
     126: '~',
-    536: 'DUP'
+    300: ' ',
+    461: ' ',
+    536: 'DUP',
+    544: ' '
 };
 
 function ButtonAppBar({ chordLibrary, setChordLibrary }) {
