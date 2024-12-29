@@ -8,6 +8,7 @@ import ChordDiagnostic from '../components/ChordDiagnostic';
 import ChordStatistics from '../components/ChordStatistics';
 import CC1ChordGenerator from '../components/CC1ChordGenerator';
 import ChordViewer from '../components/ChordViewer';
+import ToleranceRecommender from '../components/ToleranceRecommender';
 
 function CustomTabPanel(props) {
     const { children, value, index, ...other } = props;
@@ -60,6 +61,7 @@ function ChordTools({ chordLibrary = [], setChordLibrary }) {
                     <Tab label="Chord Statistics" {...a11yProps(1)} />
                     <Tab label="CC1 Chord Generator" {...a11yProps(2)} />
                     <Tab label="Chord Timing Diagnostic Tool" {...a11yProps(3)} />
+                    <Tab label="Chord Tolerance Recommender" {...a11yProps(4)} />
                 </Tabs>
             </Box>
             <CustomTabPanel value={value} index={0}>
@@ -73,6 +75,9 @@ function ChordTools({ chordLibrary = [], setChordLibrary }) {
             </CustomTabPanel>
             <CustomTabPanel value={value} index={3}>
                 <ChordDiagnostic />
+            </CustomTabPanel>
+            <CustomTabPanel value={value} index={4}>
+                <ToleranceRecommender />
             </CustomTabPanel>
         </div>
     );
