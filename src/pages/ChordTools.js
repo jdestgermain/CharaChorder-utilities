@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
@@ -43,11 +44,36 @@ function a11yProps(index) {
     };
 }
 
-function ChordTools({ chordLibrary = [], setChordLibrary }) {
-    const [value, setValue] = React.useState(0);
+function ChordTools({ chordLibrary, setChordLibrary }) {
+    const navigate = useNavigate();
+    const location = useLocation();
 
+    // Local state to keep track of current tab
+    const [value, setValue] = useState(0);
+
+    // On initial render or if location.search changes, read ?tab=xxx
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const tabParam = searchParams.get('tab');
+
+        if (tabParam !== null) {
+            const parsedTab = parseInt(tabParam, 10);
+            if (!isNaN(parsedTab)) {
+                setValue(parsedTab);
+            }
+        }
+    }, [location.search]);
+
+    // When user clicks a different tab, update both the local state and the URL
     const handleChange = (event, newValue) => {
         setValue(newValue);
+        navigate(
+            {
+                pathname: '/chord-tools',
+                search: `?tab=${newValue}`,
+            },
+            { replace: true } // avoids pushing new history entries
+        );
     };
 
     return (
@@ -64,14 +90,15 @@ function ChordTools({ chordLibrary = [], setChordLibrary }) {
                     <Tab label="Chord Tolerance Recommender" {...a11yProps(4)} />
                 </Tabs>
             </Box>
+
             <CustomTabPanel value={value} index={0}>
                 <ChordViewer chordLibrary={chordLibrary} setChordLibrary={setChordLibrary} />
             </CustomTabPanel>
             <CustomTabPanel value={value} index={1}>
-                <ChordStatistics chordLibrary={chordLibrary}/>
+                <ChordStatistics chordLibrary={chordLibrary} />
             </CustomTabPanel>
             <CustomTabPanel value={value} index={2}>
-                <CC1ChordGenerator chordLibrary={chordLibrary}/>
+                <CC1ChordGenerator chordLibrary={chordLibrary} />
             </CustomTabPanel>
             <CustomTabPanel value={value} index={3}>
                 <ChordDiagnostic />
@@ -82,5 +109,10 @@ function ChordTools({ chordLibrary = [], setChordLibrary }) {
         </div>
     );
 }
+
+ChordTools.propTypes = {
+    chordLibrary: PropTypes.array,
+    setChordLibrary: PropTypes.func,
+};
 
 export default ChordTools;
